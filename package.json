@@ -1,0 +1,27 @@
+{
+  "name": "trusset-kyc-hashing",
+  "version": "1.0.0",
+  "description": "KYC data hashing tool for Trusset tokenization infrastructure",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/index.js hash",
+    "hash": "tsc && node dist/index.js hash",
+    "decrypt": "tsc && node dist/index.js decrypt",
+    "show": "tsc && node dist/index.js show",
+    "postinstall": "tsc"
+  },
+  "keywords": ["kyc", "hashing", "tokenization", "blockchain"],
+  "author": "Trusset",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "csv-parse": "^5.5.6",
+    "csv-stringify": "^6.5.0",
+    "ethers": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}

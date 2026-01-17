@@ -1,0 +1,27 @@
+{
+  "mapping": {
+    "fields": [
+      "firstName",
+      "lastName",
+      "dateOfBirth",
+      "nationality",
+      "documentType",
+      "documentNumber",
+      "documentExpiry",
+      "address",
+      "city",
+      "postalCode",
+      "country"
+    ],
+    "includeWalletAddress": false,
+    "walletAddressField": "walletAddress"
+  },
+  "output": {
+    "format": "csv",
+    "includeIndex": true
+  },
+  "security": {
+    "clearInputAfterProcessing": true,
+    "hashAlgorithm": "keccak256"
+  }
+}
