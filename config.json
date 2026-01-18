@@ -13,7 +13,7 @@
       "postalCode",
       "country"
     ],
-    "includeWalletAddress": false,
+    "includeWalletAddress": true,
     "walletAddressField": "walletAddress"
   },
   "output": {
