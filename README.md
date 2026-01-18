@@ -2,6 +2,8 @@
 
 Generate deterministic KYC hashes for on-chain identity verification.
 
+![Batch verification tool](/assets/labs.png)
+
 ## Quick Start
 
 ```bash
