@@ -1,6 +1,6 @@
 <div align="center">
 
-![Batch verification tool](/assets/labs.png)
+![Batch verification tool](/assets/kyc-intro.png)
 
 # Trusset KYC Hashing Tool
 
