@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from 'csv-parse/sync';
-import { stringify } from 'csv-stringify/sync';
-import { Config, KycRecord, HashOutput } from './types';
+import { stringify, Input } from 'csv-stringify/sync';
+import { Config, KycRecord } from './types';
 
 const INPUT_DIR = path.join(process.cwd(), 'input');
 const OUTPUT_DIR = path.join(process.cwd(), 'output');
@@ -15,7 +15,11 @@ export function ensureDirectories(): void {
 export function getInputFiles(): string[] {
   ensureDirectories();
   return fs.readdirSync(INPUT_DIR)
-    .filter(f => f.endsWith('.json') || f.endsWith('.csv'))
+    .filter(f => {
+      const lower = f.toLowerCase();
+      return lower.endsWith('.json') || lower.endsWith('.csv');
+    })
+    .sort()
     .map(f => path.join(INPUT_DIR, f));
 }
 
@@ -24,33 +28,54 @@ export function readInputFile(filePath: string): KycRecord[] {
   const content = fs.readFileSync(filePath, 'utf-8');
 
   if (ext === '.json') {
-    const parsed = JSON.parse(content);
-    return Array.isArray(parsed) ? parsed : [parsed];
+    let parsed: any;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new Error(`Invalid JSON in file: ${path.basename(filePath)}`);
+    }
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      parsed = [parsed];
+    }
+    if (!Array.isArray(parsed)) {
+      throw new Error(`File ${path.basename(filePath)} must contain an array or object`);
+    }
+    return parsed as KycRecord[];
   }
 
   if (ext === '.csv') {
     return parse(content, {
       columns: true,
       skip_empty_lines: true,
-      trim: true
+      trim: true,
+      bom: true
     }) as KycRecord[];
   }
 
   throw new Error(`Unsupported file format: ${ext}`);
 }
 
-export function writeOutput(data: HashOutput[], config: Config, suffix: string = ''): string {
+export function writeOutput<T extends object>(data: T[], config: Config, suffix: string = ''): string {
   ensureDirectories();
-  const timestamp = Date.now();
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const ext = config.output.format;
   const filename = `kyc_hashes_${timestamp}${suffix}.${ext}`;
   const outputPath = path.join(OUTPUT_DIR, filename);
 
+  if (data.length === 0) {
+    fs.writeFileSync(outputPath, ext === 'json' ? '[]' : '');
+    return outputPath;
+  }
+
   if (ext === 'json') {
     fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
   } else {
-    const columns = Object.keys(data[0] || {});
-    const csv = stringify(data, { header: true, columns });
+    const columnSet = new Set<string>(Object.keys(data[0] as Record<string, unknown>));
+    for (const row of data) {
+      Object.keys(row as Record<string, unknown>).forEach(k => columnSet.add(k));
+    }
+    const columns = Array.from(columnSet);
+    const csv = stringify(data as unknown as Input, { header: true, columns });
     fs.writeFileSync(outputPath, csv);
   }
 
@@ -58,11 +83,16 @@ export function writeOutput(data: HashOutput[], config: Config, suffix: string =
 }
 
 export function clearInputFolder(): void {
+  if (!fs.existsSync(INPUT_DIR)) return;
   const files = fs.readdirSync(INPUT_DIR);
-  files.forEach(file => {
+  for (const file of files) {
+    if (file === '.gitkeep') continue;
     const filePath = path.join(INPUT_DIR, file);
-    if (file !== '.gitkeep') {
-      fs.unlinkSync(filePath);
+    try {
+      const stat = fs.statSync(filePath);
+      if (stat.isFile()) fs.unlinkSync(filePath);
+    } catch {
+      continue;
     }
-  });
+  }
 }

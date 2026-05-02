@@ -1,16 +1,16 @@
-import { Config, KycRecord } from './types';
-import { verifyHash } from './hash';
+import { Config, DecryptInput, KycRecord } from './types';
+import { hashKycData } from './hash';
 
-export interface VerificationInput {
-  kycHash: string;
-  [key: string]: string | number | boolean | undefined;
-}
+const HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
+
+export type VerificationInput = DecryptInput;
 
 export interface VerificationResult {
   index: number;
+  walletAddress: string;
   kycHash: string;
-  isValid: string;
-  walletAddress?: string;
+  computedHash: string;
+  isValid: 'valid' | 'invalid';
 }
 
 export function verifyRecords(records: VerificationInput[], config: Config): VerificationResult[] {
@@ -19,29 +19,40 @@ export function verifyRecords(records: VerificationInput[], config: Config): Ver
 
   for (let i = 0; i < records.length; i++) {
     const record = records[i];
-    const { kycHash, ...kycData } = record;
+    const expected = typeof record.kycHash === 'string' ? record.kycHash.trim() : '';
+    const walletRaw = record[walletField];
+    const walletAddress = typeof walletRaw === 'string' ? walletRaw.trim() : '';
 
-    if (!kycHash) {
+    if (!expected || !HASH_PATTERN.test(expected)) {
       results.push({
         index: i + 1,
-        kycHash: 'MISSING',
+        walletAddress,
+        kycHash: expected,
+        computedHash: '',
         isValid: 'invalid'
       });
       continue;
     }
 
-    const isValid = verifyHash(kycData as KycRecord, kycHash, config);
-    const result: VerificationResult = {
-      index: i + 1,
-      kycHash,
-      isValid: isValid ? 'valid' : 'invalid'
-    };
-
-    if (kycData[walletField]) {
-      result.walletAddress = String(kycData[walletField]);
+    try {
+      const computed = hashKycData(record as KycRecord, config);
+      const isValid = computed.toLowerCase() === expected.toLowerCase();
+      results.push({
+        index: i + 1,
+        walletAddress,
+        kycHash: expected,
+        computedHash: computed,
+        isValid: isValid ? 'valid' : 'invalid'
+      });
+    } catch {
+      results.push({
+        index: i + 1,
+        walletAddress,
+        kycHash: expected,
+        computedHash: '',
+        isValid: 'invalid'
+      });
     }
-
-    results.push(result);
   }
 
   return results;

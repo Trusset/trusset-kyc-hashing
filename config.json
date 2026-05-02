@@ -7,18 +7,22 @@
       "nationality",
       "documentType",
       "documentNumber",
-      "documentExpiry",
-      "address",
-      "city",
-      "postalCode",
-      "country"
+      "documentIssuingCountry"
     ],
-    "includeWalletAddress": true,
-    "walletAddressField": "walletAddress"
+    "walletAddressField": "walletAddress",
+    "countryField": "country",
+    "investorTypeField": "investorType",
+    "softExpiryDaysField": "softExpiryDays",
+    "hardExpiryDaysField": "hardExpiryDays"
   },
   "output": {
     "format": "csv",
-    "includeIndex": true
+    "includeIndex": true,
+    "defaults": {
+      "investorType": "RETAIL",
+      "softExpiryDays": 365,
+      "hardExpiryDays": 730
+    }
   },
   "security": {
     "clearInputAfterProcessing": true,
