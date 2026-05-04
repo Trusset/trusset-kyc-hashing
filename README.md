@@ -142,6 +142,6 @@ Each row maps directly to the `/customers/api/identity/verify` request body in t
 
 <div align="center">
 
-Built by [Trusset](https://trusset.io) · [Report an Issue](https://github.com/trusset/kyc-hashing-tool/issues)
+Built by [Trusset](https://trusset.org) · [Report an Issue](https://trusset.org/contact)
 
 </div>
